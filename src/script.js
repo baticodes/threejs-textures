@@ -11,16 +11,12 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 // Config
 const backgroundColor = 0xf1f1f1;
 
-// Debug
-const gui = new dat.GUI()
-
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
 scene.background = new THREE.Color(backgroundColor);
-// scene.fog = new THREE.Fog(backgroundColor, 60, 100);
 
 // Axes helper
 const axesHelper = new THREE.AxesHelper( 5 );
@@ -35,124 +31,31 @@ dracoLoader.setDecoderPath('/draco/')
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(dracoLoader)
 
-let mixer = null
-
 gltfLoader.load(
-  '/models/Baby_old/glTF/BABY.gltf',
-  (oldGltf) => {
-    const oldModel = oldGltf.scene;
-    let shirtData = null;
-    let shirtMaterial = null;
-    console.log(oldModel);
-    oldModel.traverse(o => {
-      if (o.isMesh) {
-        if(o.name === 'Baby_Low_Poly_001_Baked') {
-          shirtData = o.toJSON();
-          shirtMaterial = o.material;
+    '/models/baby/baby.glb',
+    (gltf) =>
+    {
+      const model = gltf.scene;
+      scene.add(gltf.scene)
 
-          console.log(shirtMaterial.map);
-          console.log(shirtData.textures[0].wrap);
+      model.traverse(o => {
+
+        if (o.isMesh) {
+          o.castShadow = true;
+          o.receiveShadow = true;
         }
-      }
-    });
 
-    gltfLoader.load(
-      '/models/baby/baby.glb',
-      (gltf) => {
-        const model = gltf.scene;
-        const {children} = model;
-        // gltf.scene.scale.set(0.025, 0.025, 0.025)
-        scene.add(gltf.scene)
-        // console.log(children);
-  
-        model.traverse(o => {
-  
-          if (o.isMesh) {
-            o.castShadow = true;
-            o.receiveShadow = true;
-            // o.material = stacy_mtl;
-            if(o.name === 'Baby_Low_Poly_001_Baked') {
-              const material = o.material;
-              // console.log(material);
-              // console.log(material.color);
-            }
-            
-          }
-  
-          if(o.name === 'shirt') {
-            const texture = new THREE.TextureLoader().load( '/models/baby/shirt.png' );
-            texture.wrapS = THREE.ClampToEdgeWrapping
-            texture.wrapT = THREE.RepeatWrapping
-            texture.anisotropy = 1
-            texture.generateMipmaps = true
-            texture.isRenderTargetTexture = false
-            texture.magFilter = THREE.LinearFilter
-            texture.mapping = 300
-            texture.matrixAutoUpdate = true
-            texture.minFilter = 1008
-            
-            o.material = new THREE.MeshStandardMaterial({
-              color: new THREE.Color( 16777215 ),
+        if(o.name === 'shirt') {
+          const texture = new THREE.TextureLoader().load( '/models/baby/shirt.png' );
+          o.material = new THREE.MeshStandardMaterial({
               metalness: 0,
               roughness: 0.5,
               map: texture,
-            })
-            // o.material = shirtMaterial;
-            // o.material = new THREE.MeshPhongMaterial({
-            //   map: texture,
-            //   color: new THREE.Color( 0xfff ),
-            //   skinning: true });
-
-            texture.needsUpdate = true
-            o.material.needsUpdate = true
-
-          }
-        });
-      }
-  )
-  }
-);
-
-// gltfLoader.load(
-//     // '/models/baby/baby.glb',
-//     '/models/Baby_old/glTF/BABY.gltf',
-//     (gltf) =>
-//     {
-//       const model = gltf.scene;
-//       const {children} = model;
-//       // gltf.scene.scale.set(0.025, 0.025, 0.025)
-//       scene.add(gltf.scene)
-//       console.log(children);
-
-//       model.traverse(o => {
-
-//         if (o.isMesh) {
-//           o.castShadow = true;
-//           o.receiveShadow = true;
-//           // o.material = stacy_mtl;
-//           if(o.name === 'Baby_Low_Poly_001_Baked') {
-//             const material = o.material;
-//             console.log(material);
-//             console.log(material.color);
-//           }
-          
-//         }
-
-//         if(o.name === 'shirt') {
-//           const texture = new THREE.TextureLoader().load( '/models/baby/shirt.png' );
-//           o.material = new THREE.MeshStandardMaterial({
-//               metalness: 0,
-//               roughness: 0.5,
-//               map: texture,
-//           })
-//           // o.material = new THREE.MeshPhongMaterial({
-//           //   map: texture,
-//           //   color: new THREE.Color( 0xfff ),
-//           //   skinning: true });
-//         }
-//       });
-//     }
-// )
+          })
+        }
+      });
+    }
+)
 
 /**
  * Floor
@@ -267,21 +170,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 /**
  * Animate
  */
-const clock = new THREE.Clock()
-let previousTime = 0
-
 const tick = () =>
 {
-    const elapsedTime = clock.getElapsedTime()
-    const deltaTime = elapsedTime - previousTime
-    previousTime = elapsedTime
-
-    // Model animation
-    if(mixer)
-    {
-        mixer.update(deltaTime)
-    }
-
     // Update controls
     controls.update()
 
